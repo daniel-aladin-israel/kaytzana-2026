@@ -101,6 +101,12 @@ main{max-width:1100px;margin:0 auto;padding:24px 18px 80px;}
 .block{border-radius:10px;padding:10px 12px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(var(--block-scrim),var(--block-scrim)),var(--block-bg);position:relative;cursor:grab;transition:transform .15s,box-shadow .15s;text-shadow:var(--block-shadow);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
 .block.dragging{cursor:grabbing;}
 .block-placeholder{height:40px;border-radius:10px;border:2px dashed #f5c842;background:rgba(245,200,66,.14);box-sizing:border-box;}
+.block.shabbat-bake{border:1.5px solid #f5c842;box-shadow:0 0 0 2px rgba(245,200,66,.28);}
+.block.shabbat-bake .block-title::after{content:' ✨';}
+.block-edit{position:absolute;top:6px;left:30px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(0,0,0,.3);color:#fff;font-size:.6rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;opacity:.5;transition:opacity .15s,background .15s;z-index:3;}
+.block:hover .block-edit{opacity:1;}
+.block-edit:hover{background:#3ecf72;opacity:1;transform:scale(1.1);}
+.edit-select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:'Rubik',sans-serif;font-size:.9rem;cursor:pointer;}
 .block:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.35);}
 .block-time{font-size:.62rem;font-weight:800;color:var(--block-color);letter-spacing:.5px;margin-bottom:3px;}
 .block-emoji{font-size:1.3rem;display:block;margin-bottom:4px;}
@@ -268,7 +274,7 @@ var WEEKS=[
 {name:'רביעי',color:'#b45309',blocks:[
 {type:'creative',time:'9:00–11:00',emoji:'🖼️',title:'מסכות חיות אפריקה',desc:'מסכות מנייר מאשה: אריה, היפופוטם, פיל, זברה'},
 {type:'activity',time:'11:00–13:00',emoji:'📸',title:'ספארי צילום בשכונה',desc:'כל ילד צלם — מוצאים "חיות" בשכונה ומצלמים'},
-{type:'food',time:'13:00–14:00',emoji:'🧁',title:'עוגיות לב האריות לשבת',desc:'אופים עוגיות בצורת לב עם ציפוי זהב — מכינים לכבוד שבת (הוקדם לרביעי כי חמישי הוא צום י״ז בתמוז)'},
+{type:'food',time:'13:00–14:00',emoji:'🧁',title:'עוגיות לב האריות לשבת',desc:'אופים עוגיות בצורת לב עם ציפוי זהב — מכינים לכבוד שבת (הוקדם לרביעי כי חמישי הוא צום י״ז בתמוז)',shabbat:1},
 {type:'challenge',time:'14:00–16:00',emoji:'🌩️',title:'קרב על הממלכה',desc:'טיפת מים — כל אחד שומר על אזור שלו, מי יישאר יבש?'},
 {type:'evening',time:'20:30',emoji:'🦁',title:'ליל קולנוע — מלך האריות (1994)',desc:'פופקורן + שמיכות + הקלאסיקה של דיסני (הועבר לרביעי כי חמישי הוא צום י״ז בתמוז)'}
 ]},
@@ -353,7 +359,7 @@ var WEEKS=[
 {name:'רביעי',color:'#16a34a',blocks:[
 {type:'creative',time:'9:00–11:00',emoji:'📖',title:'קומיקס TMNT שלנו',desc:'4 עמודים — כל ילד מצייר פרק בסדרה החדשה'},
 {type:'activity',time:'11:00–13:00',emoji:'🥋',title:'הפגנת כוחות לפני המשפחה',desc:'כל נינג\'ה מציג את ה-5 תנועות שלמד בתחילת השבוע'},
-{type:'food',time:'13:00–14:00',emoji:'🍰',title:'עוגת הצבים לשבת',desc:'עוגה בציפוי ירוק עם מסכות הנינג\'ה — אופים לכבוד שבת (הוקדם לרביעי כי חמישי הוא תשעה באב)'},
+{type:'food',time:'13:00–14:00',emoji:'🍰',title:'עוגת הצבים לשבת',desc:'עוגה בציפוי ירוק עם מסכות הנינג\'ה — אופים לכבוד שבת (הוקדם לרביעי כי חמישי הוא תשעה באב)',shabbat:1},
 {type:'challenge',time:'14:00–16:00',emoji:'🎤',title:'ראפ של הצבים',desc:'כל ילד מלחין ראפ 4 שורות על הנינג\'ה שלו'},
 {type:'evening',time:'20:30',emoji:'🐢',title:'ליל קולנוע — צבי הנינג\'ה (1990)',desc:'פיצה + שמיכות + קוואבונגה!'}
 ]},
@@ -624,7 +630,7 @@ WEEKS.forEach(function(w){
 
     d.blocks.forEach(function(b){
       var blk=document.createElement('div');
-      blk.className='block '+b.type;
+      blk.className='block '+b.type+(b.shabbat?' shabbat-bake':'');
       blk.innerHTML='<div class="block-time">'+b.time+'</div>'
         +'<span class="block-emoji">'+b.emoji+'</span>'
         +'<div class="block-title">'+b.title+'</div>'
@@ -634,6 +640,7 @@ WEEKS.forEach(function(w){
         +'</div>';
       blk.querySelector('[data-action="search"]').onclick=function(e){e.stopPropagation();openSearch(b.type,b.title,w.title.replace('שבוע ',''));};
       attachDelete(blk);
+      attachEdit(blk);
       attachDragHandle(blk);
       tbs.appendChild(blk);
     });
@@ -705,6 +712,69 @@ function attachDelete(blk){
   x.textContent='✕';
   x.onclick=function(e){e.stopPropagation();blk.remove();};
   blk.appendChild(x);
+}
+
+// edit button + edit modal: change time / name / content / day
+var _editBlk=null,_editEmoji='📌';
+function attachEdit(blk){
+  var b=document.createElement('button');
+  b.className='block-edit';
+  b.setAttribute('title','ערוך פעילות');
+  b.setAttribute('aria-label','ערוך פעילות');
+  b.textContent='✏️';
+  b.onclick=function(e){e.stopPropagation();openEditModal(blk);};
+  blk.appendChild(b);
+}
+function buildEmojiGrid(gridEl,current,onPick){
+  gridEl.innerHTML='';
+  ADD_EMOJIS.forEach(function(em){
+    var s=document.createElement('div');
+    s.className='emoji-opt'+(em===current?' sel':'');
+    s.setAttribute('data-em',em);
+    s.textContent=em;
+    s.onclick=function(){onPick(em);Array.prototype.forEach.call(gridEl.children,function(c){c.classList.toggle('sel',c.getAttribute('data-em')===em);});};
+    gridEl.appendChild(s);
+  });
+}
+function openEditModal(blk){
+  _editBlk=blk;
+  var emojiEl=blk.querySelector('.block-emoji'),titleEl=blk.querySelector('.block-title'),
+      timeEl=blk.querySelector('.block-time'),descEl=blk.querySelector('.block-desc');
+  _editEmoji=emojiEl?emojiEl.textContent.trim():'📌';
+  document.getElementById('editTitle').value=titleEl?titleEl.textContent:'';
+  document.getElementById('editTime').value=timeEl?timeEl.textContent:'';
+  document.getElementById('editDesc').value=descEl?descEl.textContent:'';
+  var page=blk.closest('.page'),cols=page?page.querySelectorAll('.day-col'):[],curIdx=-1;
+  for(var i=0;i<cols.length;i++){if(cols[i].contains(blk)){curIdx=i;break;}}
+  var sel=document.getElementById('editDay');sel.innerHTML='';
+  for(var j=0;j<cols.length;j++){
+    var nm=(cols[j].querySelector('.day-name')||{}).textContent||('יום '+(j+1));
+    var opt=document.createElement('option');opt.value=j;opt.textContent=nm.trim();
+    if(j===curIdx)opt.selected=true;sel.appendChild(opt);
+  }
+  buildEmojiGrid(document.getElementById('editEmojiGrid'),_editEmoji,function(em){_editEmoji=em;});
+  document.getElementById('editModalOverlay').classList.add('open');
+}
+function closeEditModal(){document.getElementById('editModalOverlay').classList.remove('open');_editBlk=null;}
+function saveEdit(){
+  if(!_editBlk)return;
+  var blk=_editBlk;
+  var title=document.getElementById('editTitle').value.trim();
+  if(!title){alert('נא להזין שם פעילות');return;}
+  var time=document.getElementById('editTime').value.trim();
+  var desc=document.getElementById('editDesc').value.trim();
+  var emojiEl=blk.querySelector('.block-emoji');if(emojiEl)emojiEl.textContent=_editEmoji;
+  var titleEl=blk.querySelector('.block-title');if(titleEl)titleEl.textContent=title;
+  var timeEl=blk.querySelector('.block-time');
+  if(time){if(timeEl)timeEl.textContent=time;else{var dt=document.createElement('div');dt.className='block-time';dt.textContent=time;blk.insertBefore(dt,blk.firstChild);}}
+  else if(timeEl)timeEl.remove();
+  var descEl=blk.querySelector('.block-desc');
+  if(desc){if(descEl)descEl.textContent=desc;else if(titleEl){var dd=document.createElement('div');dd.className='block-desc';dd.textContent=desc;titleEl.parentNode.insertBefore(dd,titleEl.nextSibling);}}
+  else if(descEl)descEl.remove();
+  var page=blk.closest('.page'),cols=page?page.querySelectorAll('.day-col'):[];
+  var idx=parseInt(document.getElementById('editDay').value,10);
+  if(cols[idx]){var tb=cols[idx].querySelector('.time-blocks');if(tb)insertSorted(tb,blk,time);}
+  closeEditModal();
 }
 
 // drag-and-drop: hold the whole activity to move it (mouse + touch via Pointer Events).
@@ -892,8 +962,8 @@ function openAddModal(weekId, dayName){
 function closeAddModal(){
   document.getElementById('addModalOverlay').classList.remove('open');
 }
-document.addEventListener('click',function(e){if(e.target&&e.target.id==='addModalOverlay')closeAddModal();});
-document.addEventListener('keydown',function(e){if(e.key==='Escape')closeAddModal();});
+document.addEventListener('click',function(e){if(e.target&&e.target.id==='addModalOverlay')closeAddModal();if(e.target&&e.target.id==='editModalOverlay')closeEditModal();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeAddModal();closeEditModal();}});
 
 function submitAdd(){
   var emoji=_addEmoji||'📌';
@@ -924,6 +994,7 @@ function submitAdd(){
     openSearch('activity',title,w.title.replace('שבוע ',''));
   };
   attachDelete(blk);
+  attachEdit(blk);
   attachDragHandle(blk);
   insertSorted(tbs,blk,time);
   closeAddModal();
@@ -1100,6 +1171,41 @@ function toggleTheme(){
       <div style="display:flex;gap:10px;margin-top:6px;">
         <button class="btn-cancel" onclick="closeAddModal()">סגור</button>
         <button class="btn-add" onclick="submitAdd()">✅ הוסף לתוכנית</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editModalOverlay">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
+      <div class="modal-title">✏️ עריכת פעילות</div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-section-title">יום</div>
+        <select id="editDay" class="edit-select"></select>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">בחרו אימוג׳י</div>
+        <div class="emoji-grid" id="editEmojiGrid"></div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">שם הפעילות</div>
+        <input id="editTitle" type="text" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'Rubik',sans-serif;font-size:.9rem;">
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">שעה</div>
+        <input id="editTime" type="text" placeholder="למשל: 10:00–11:00 (ריק = ללא שעה)" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'Rubik',sans-serif;font-size:.9rem;">
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">תוכן / תיאור</div>
+        <input id="editDesc" type="text" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'Rubik',sans-serif;font-size:.9rem;">
+      </div>
+      <div style="display:flex;gap:10px;margin-top:6px;">
+        <button class="btn-cancel" onclick="closeEditModal()">ביטול</button>
+        <button class="btn-add" onclick="saveEdit()">💾 שמירה</button>
       </div>
     </div>
   </div>
