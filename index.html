@@ -653,6 +653,21 @@ WEEKS.forEach(function(w){
 
     col.appendChild(tbs);
 
+    // שעת צביעה קבועה — פעמיים בשבוע (ראשון ושלישי)
+    if(di===0||di===2){
+      var cb={type:'creative',time:'13:00–14:00',emoji:'🎨',title:'שעת צביעה',desc:'דפי צביעה בנושא '+w.title.replace('שבוע ','')+' — רגיעה ויצירה'};
+      var cblk=document.createElement('div');
+      cblk.className='block '+cb.type;
+      cblk.innerHTML='<div class="block-time">'+cb.time+'</div>'
+        +'<span class="block-emoji">'+cb.emoji+'</span>'
+        +'<div class="block-title">'+cb.title+'</div>'
+        +'<div class="block-desc">'+cb.desc+'</div>'
+        +'<div class="block-actions"><span class="block-hint" data-action="search">🔍 רעיונות</span></div>';
+      cblk.querySelector('[data-action="search"]').onclick=function(e){e.stopPropagation();openSearch('creative',cb.title,w.title.replace('שבוע ',''));};
+      attachDelete(cblk);attachEdit(cblk);attachCheck(cblk);attachDragHandle(cblk);
+      insertSorted(tbs,cblk,cb.time);
+    }
+
     var addBtn=document.createElement('button');
     addBtn.className='add-block-btn';
     addBtn.textContent='+ הוסף פעילות';
