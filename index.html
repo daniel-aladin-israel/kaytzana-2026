@@ -775,7 +775,7 @@ function openAddModal(weekId, dayName){
 function closeAddModal(){
   document.getElementById('addModalOverlay').classList.remove('open');
 }
-document.getElementById('addModalOverlay').addEventListener('click',function(e){if(e.target===this)closeAddModal();});
+document.addEventListener('click',function(e){if(e.target&&e.target.id==='addModalOverlay')closeAddModal();});
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeAddModal();});
 
 function submitAdd(){
