@@ -113,6 +113,13 @@ main{max-width:1100px;margin:0 auto;padding:24px 18px 80px;}
 .block-del{position:absolute;top:6px;left:6px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(0,0,0,.3);color:#fff;font-size:.68rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;opacity:.5;transition:opacity .15s,background .15s;z-index:3;}
 .block:hover .block-del{opacity:1;}
 .block-del:hover{background:#e84393;opacity:1;transform:scale(1.1);}
+.block-drag{position:absolute;top:6px;right:6px;width:24px;height:20px;display:flex;align-items:center;justify-content:center;color:var(--block-text);opacity:.45;cursor:grab;touch-action:none;font-size:.95rem;line-height:1;z-index:3;user-select:none;}
+.block:hover .block-drag{opacity:.9;}
+.block-drag:active{cursor:grabbing;}
+.block-time{padding-right:26px;}
+.block.dragging{opacity:.3;}
+.time-blocks.drop-target{outline:2px dashed #f5c842;outline-offset:2px;background:rgba(245,200,66,.1);}
+.block-floating{position:fixed;pointer-events:none;z-index:9999;box-shadow:0 14px 34px rgba(0,0,0,.5);opacity:.96;transform:rotate(-1.5deg);}
 .block.morning{--block-bg:rgba(255,200,60,.07);--block-color:#f5c842;}
 .block.activity{--block-bg:rgba(255,107,53,.07);--block-color:#ff6b35;}
 .block.creative{--block-bg:rgba(167,139,250,.07);--block-color:#a78bfa;}
@@ -348,10 +355,8 @@ var WEEKS=[
 {type:'challenge',time:'14:00–16:00',emoji:'🎤',title:'ראפ של הצבים',desc:'כל ילד מלחין ראפ 4 שורות על הנינג\'ה שלו'},
 {type:'evening',time:'20:30',emoji:'🐢',title:'ליל קולנוע — צבי הנינג\'ה (1990)',desc:'פיצה + שמיכות + קוואבונגה!'}
 ]},
-{name:'חמישי',color:'#22c55e',blocks:[
-{type:'creative',time:'9:00–11:00',emoji:'🐢',title:'מסכות וכלי נינג\'ה',desc:'כל ילד מכין מסכת נינג\'ה צבעונית ונשק קצף בטיחותי משלו'},
-{type:'food',time:'11:00–13:00',emoji:'🍕',title:'מסיבת פיצה סיום',desc:'אוכלים פיצה, מציגים את כלי הנינג\'ה ובוחרים נינג\'ה השבוע'},
-{type:'evening',time:'19:30',emoji:'🌙',title:'ליל נינג\'ה — לינה בסלון',desc:'שמיכות, פנסים, ספורי הרפתקות נינג\'ה בחשיכה'}
+{name:'חמישי',color:'#475569',blocks:[
+{type:'free',time:'כל היום',emoji:'🕯️',title:'צפייה בסוד של ירושלים',desc:'תשעה באב — יום צום ואבל על חורבן בית המקדש. פעילות אחת רגועה לכל היום: צופים יחד בסרט "הסוד של ירושלים" ומשוחחים על משמעות היום וירושלים'}
 ]}
 ]},
 {id:'w4',num:5,heroEmoji:'🤠',title:'שבוע צעצוע של סיפור',weekIdx:4,dates:'26–31 יולי 2026',desc:'לאינפיניטי ומעבר לו! שבוע של דמיון, צעצועים שחיים ורגשות אמיתיים.',fromColor:'#1e3a5f',toColor:'#0ea5e9',tags:['Toy Story','ווּדי','באז','דמיון'],days:[
@@ -627,6 +632,7 @@ WEEKS.forEach(function(w){
         +'</div>';
       blk.querySelector('[data-action="search"]').onclick=function(e){e.stopPropagation();openSearch(b.type,b.title,w.title.replace('שבוע ',''));};
       attachDelete(blk);
+      attachDragHandle(blk);
       tbs.appendChild(blk);
     });
 
@@ -697,6 +703,62 @@ function attachDelete(blk){
   x.textContent='✕';
   x.onclick=function(e){e.stopPropagation();blk.remove();};
   blk.appendChild(x);
+}
+
+// drag-and-drop: move an activity between days (mouse + touch via Pointer Events)
+var _drag=null;
+function attachDragHandle(blk){
+  var h=document.createElement('div');
+  h.className='block-drag';
+  h.setAttribute('title','גרור כדי להעביר ליום אחר');
+  h.setAttribute('aria-label','גרור פעילות');
+  h.textContent='⠿';
+  h.addEventListener('pointerdown',function(e){startBlockDrag(e,h);});
+  blk.appendChild(h);
+}
+function startBlockDrag(e,handle){
+  e.preventDefault();e.stopPropagation();
+  var blk=handle.closest('.block');
+  if(!blk)return;
+  var rect=blk.getBoundingClientRect();
+  var clone=blk.cloneNode(true);
+  clone.className='block '+(blk.className.replace('block','').replace('dragging','').trim())+' block-floating';
+  clone.style.width=rect.width+'px';
+  clone.style.left=rect.left+'px';
+  clone.style.top=rect.top+'px';
+  document.body.appendChild(clone);
+  blk.classList.add('dragging');
+  _drag={blk:blk,clone:clone,handle:handle,offsetX:e.clientX-rect.left,offsetY:e.clientY-rect.top,target:null};
+  try{handle.setPointerCapture(e.pointerId);}catch(_){}
+  handle.addEventListener('pointermove',onBlockDragMove);
+  handle.addEventListener('pointerup',onBlockDragEnd);
+  handle.addEventListener('pointercancel',onBlockDragEnd);
+}
+function onBlockDragMove(e){
+  if(!_drag)return;
+  e.preventDefault();
+  _drag.clone.style.left=(e.clientX-_drag.offsetX)+'px';
+  _drag.clone.style.top=(e.clientY-_drag.offsetY)+'px';
+  var el=document.elementFromPoint(e.clientX,e.clientY);
+  var tb=el?el.closest('.time-blocks'):null;
+  if(_drag.target&&_drag.target!==tb)_drag.target.classList.remove('drop-target');
+  _drag.target=tb;
+  if(tb)tb.classList.add('drop-target');
+}
+function onBlockDragEnd(e){
+  if(!_drag)return;
+  var ds=_drag;_drag=null;
+  ds.handle.removeEventListener('pointermove',onBlockDragMove);
+  ds.handle.removeEventListener('pointerup',onBlockDragEnd);
+  ds.handle.removeEventListener('pointercancel',onBlockDragEnd);
+  try{ds.handle.releasePointerCapture(e.pointerId);}catch(_){}
+  if(ds.clone&&ds.clone.parentNode)ds.clone.parentNode.removeChild(ds.clone);
+  ds.blk.classList.remove('dragging');
+  if(ds.target){
+    ds.target.classList.remove('drop-target');
+    var t=ds.blk.querySelector('.block-time');
+    insertSorted(ds.target,ds.blk,t?t.textContent:'');
+  }
 }
 
 // ADD ACTIVITY
@@ -807,6 +869,7 @@ function submitAdd(){
     openSearch('activity',title,w.title.replace('שבוע ',''));
   };
   attachDelete(blk);
+  attachDragHandle(blk);
   insertSorted(tbs,blk,time);
   closeAddModal();
 }
