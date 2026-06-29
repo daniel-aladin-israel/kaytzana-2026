@@ -106,6 +106,11 @@ main{max-width:1100px;margin:0 auto;padding:24px 18px 80px;}
 .block-edit{position:absolute;top:6px;left:32px;width:22px;height:22px;border-radius:50%;border:none;background:rgba(62,207,114,.55);color:#fff;font-size:.72rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;opacity:.85;transition:opacity .15s,background .15s,transform .15s;z-index:3;}
 .block:hover .block-edit{opacity:1;}
 .block-edit:hover{background:#3ecf72;opacity:1;transform:scale(1.1);}
+.block-check{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;border:2px solid rgba(120,140,160,.65);background:rgba(255,255,255,.12);color:rgba(150,170,190,.9);font-size:.72rem;font-weight:900;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;z-index:3;transition:all .15s;}
+.block-check:hover{border-color:#3ecf72;color:#3ecf72;transform:scale(1.1);}
+.block.done{opacity:.55;}
+.block.done .block-title{text-decoration:line-through;}
+.block.done .block-check{background:#3ecf72;border-color:#3ecf72;color:#fff;}
 .edit-select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:'Rubik',sans-serif;font-size:.9rem;cursor:pointer;}
 .block:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.35);}
 .block-time{font-size:.62rem;font-weight:800;color:var(--block-color);letter-spacing:.5px;margin-bottom:3px;}
@@ -123,7 +128,7 @@ main{max-width:1100px;margin:0 auto;padding:24px 18px 80px;}
 .block-del:hover{background:#e84393;opacity:1;transform:scale(1.1);}
 .block-drag{position:absolute;top:6px;right:6px;width:24px;height:20px;display:flex;align-items:center;justify-content:center;color:var(--block-text);opacity:.4;pointer-events:none;font-size:.95rem;line-height:1;z-index:3;}
 .block:hover .block-drag{opacity:.8;}
-.block-time{padding-right:26px;}
+.block-time{padding-right:30px;}
 .block.dragging{opacity:.3;}
 .time-blocks.drop-target{outline:2px dashed #f5c842;outline-offset:2px;background:rgba(245,200,66,.1);}
 .block-floating{position:fixed;pointer-events:none;z-index:9999;box-shadow:0 14px 34px rgba(0,0,0,.5);opacity:.96;transform:rotate(-1.5deg);}
@@ -641,6 +646,7 @@ WEEKS.forEach(function(w){
       blk.querySelector('[data-action="search"]').onclick=function(e){e.stopPropagation();openSearch(b.type,b.title,w.title.replace('שבוע ',''));};
       attachDelete(blk);
       attachEdit(blk);
+      attachCheck(blk);
       attachDragHandle(blk);
       tbs.appendChild(blk);
     });
@@ -782,10 +788,16 @@ function saveEdit(){
 var _drag=null,_pend=null,_holdTimer=null,_ph=null;
 
 function attachDragHandle(blk){
-  var h=document.createElement('div'); // decorative grip hint (whole block is draggable)
-  h.className='block-drag';h.textContent='⠿';
-  blk.appendChild(h);
   blk.addEventListener('pointerdown',onBlockPointerDown);
+}
+function attachCheck(blk){
+  var c=document.createElement('button');
+  c.className='block-check';
+  c.setAttribute('title','סמן כבוצע');
+  c.setAttribute('aria-label','סמן כבוצע');
+  c.textContent='✓';
+  c.onclick=function(e){e.stopPropagation();blk.classList.toggle('done');};
+  blk.appendChild(c);
 }
 function onBlockPointerDown(e){
   if(e.button===2)return;
@@ -995,6 +1007,7 @@ function submitAdd(){
   };
   attachDelete(blk);
   attachEdit(blk);
+  attachCheck(blk);
   attachDragHandle(blk);
   insertSorted(tbs,blk,time);
   closeAddModal();
