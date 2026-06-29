@@ -98,7 +98,9 @@ main{max-width:1100px;margin:0 auto;padding:24px 18px 80px;}
 .cal-legend-item{display:flex;align-items:center;gap:6px;font-size:.75rem;font-weight:600;}
 .cal-legend-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;display:inline-block;}
 .time-blocks{padding:10px;display:flex;flex-direction:column;gap:8px;}
-.block{border-radius:10px;padding:10px 12px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(var(--block-scrim),var(--block-scrim)),var(--block-bg);position:relative;cursor:pointer;transition:transform .15s,box-shadow .15s;text-shadow:var(--block-shadow);}
+.block{border-radius:10px;padding:10px 12px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(var(--block-scrim),var(--block-scrim)),var(--block-bg);position:relative;cursor:grab;transition:transform .15s,box-shadow .15s;text-shadow:var(--block-shadow);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+.block.dragging{cursor:grabbing;}
+.block-placeholder{height:40px;border-radius:10px;border:2px dashed #f5c842;background:rgba(245,200,66,.14);box-sizing:border-box;}
 .block:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.35);}
 .block-time{font-size:.62rem;font-weight:800;color:var(--block-color);letter-spacing:.5px;margin-bottom:3px;}
 .block-emoji{font-size:1.3rem;display:block;margin-bottom:4px;}
@@ -113,9 +115,8 @@ main{max-width:1100px;margin:0 auto;padding:24px 18px 80px;}
 .block-del{position:absolute;top:6px;left:6px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(0,0,0,.3);color:#fff;font-size:.68rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;opacity:.5;transition:opacity .15s,background .15s;z-index:3;}
 .block:hover .block-del{opacity:1;}
 .block-del:hover{background:#e84393;opacity:1;transform:scale(1.1);}
-.block-drag{position:absolute;top:6px;right:6px;width:24px;height:20px;display:flex;align-items:center;justify-content:center;color:var(--block-text);opacity:.45;cursor:grab;touch-action:none;font-size:.95rem;line-height:1;z-index:3;user-select:none;}
-.block:hover .block-drag{opacity:.9;}
-.block-drag:active{cursor:grabbing;}
+.block-drag{position:absolute;top:6px;right:6px;width:24px;height:20px;display:flex;align-items:center;justify-content:center;color:var(--block-text);opacity:.4;pointer-events:none;font-size:.95rem;line-height:1;z-index:3;}
+.block:hover .block-drag{opacity:.8;}
 .block-time{padding-right:26px;}
 .block.dragging{opacity:.3;}
 .time-blocks.drop-target{outline:2px dashed #f5c842;outline-offset:2px;background:rgba(245,200,66,.1);}
@@ -351,6 +352,7 @@ var WEEKS=[
 {name:'רביעי',color:'#16a34a',blocks:[
 {type:'creative',time:'9:00–11:00',emoji:'📖',title:'קומיקס TMNT שלנו',desc:'4 עמודים — כל ילד מצייר פרק בסדרה החדשה'},
 {type:'activity',time:'11:00–13:00',emoji:'🥋',title:'הפגנת כוחות לפני המשפחה',desc:'כל נינג\'ה מציג את ה-5 תנועות שלמד בתחילת השבוע'},
+{type:'food',time:'13:00–14:00',emoji:'🍰',title:'עוגת הצבים לשבת',desc:'עוגה בציפוי ירוק עם מסכות הנינג\'ה — אופים לכבוד שבת (הוקדם לרביעי כי חמישי הוא תשעה באב)'},
 {type:'challenge',time:'14:00–16:00',emoji:'🎤',title:'ראפ של הצבים',desc:'כל ילד מלחין ראפ 4 שורות על הנינג\'ה שלו'},
 {type:'evening',time:'20:30',emoji:'🐢',title:'ליל קולנוע — צבי הנינג\'ה (1990)',desc:'פיצה + שמיכות + קוואבונגה!'}
 ]},
@@ -704,60 +706,113 @@ function attachDelete(blk){
   blk.appendChild(x);
 }
 
-// drag-and-drop: move an activity between days (mouse + touch via Pointer Events)
-var _drag=null;
+// drag-and-drop: hold the whole activity to move it (mouse + touch via Pointer Events).
+// drop position decides the order, and the activity's time is recalculated to fit.
+var _drag=null,_pend=null,_holdTimer=null,_ph=null;
+
 function attachDragHandle(blk){
-  var h=document.createElement('div');
-  h.className='block-drag';
-  h.setAttribute('title','גרור כדי להעביר ליום אחר');
-  h.setAttribute('aria-label','גרור פעילות');
-  h.textContent='⠿';
-  h.addEventListener('pointerdown',function(e){startBlockDrag(e,h);});
+  var h=document.createElement('div'); // decorative grip hint (whole block is draggable)
+  h.className='block-drag';h.textContent='⠿';
   blk.appendChild(h);
+  blk.addEventListener('pointerdown',onBlockPointerDown);
 }
-function startBlockDrag(e,handle){
-  e.preventDefault();e.stopPropagation();
-  var blk=handle.closest('.block');
-  if(!blk)return;
-  var rect=blk.getBoundingClientRect();
+function onBlockPointerDown(e){
+  if(e.button===2)return;
+  if(e.target.closest('.block-del,.block-hint,.block-actions,button,a,input'))return;
+  var blk=e.currentTarget;
+  _pend={blk:blk,x:e.clientX,y:e.clientY,id:e.pointerId,type:e.pointerType};
+  clearTimeout(_holdTimer);
+  _holdTimer=setTimeout(function(){ if(_pend&&!_drag) beginDrag(_pend.x,_pend.y); },260);
+  blk.addEventListener('pointermove',onDragPointerMove,{passive:false});
+  blk.addEventListener('pointerup',onDragPointerUp);
+  blk.addEventListener('pointercancel',onDragPointerUp);
+}
+function clearPend(blk){
+  clearTimeout(_holdTimer);
+  blk.removeEventListener('pointermove',onDragPointerMove,{passive:false});
+  blk.removeEventListener('pointerup',onDragPointerUp);
+  blk.removeEventListener('pointercancel',onDragPointerUp);
+}
+function beginDrag(cx,cy){
+  clearTimeout(_holdTimer);
+  var blk=_pend.blk,rect=blk.getBoundingClientRect();
   var clone=blk.cloneNode(true);
-  clone.className='block '+(blk.className.replace('block','').replace('dragging','').trim())+' block-floating';
-  clone.style.width=rect.width+'px';
-  clone.style.left=rect.left+'px';
-  clone.style.top=rect.top+'px';
+  clone.classList.add('block-floating');clone.classList.remove('dragging');
+  clone.style.width=rect.width+'px';clone.style.left=rect.left+'px';clone.style.top=rect.top+'px';
   document.body.appendChild(clone);
   blk.classList.add('dragging');
-  _drag={blk:blk,clone:clone,handle:handle,offsetX:e.clientX-rect.left,offsetY:e.clientY-rect.top,target:null};
-  try{handle.setPointerCapture(e.pointerId);}catch(_){}
-  handle.addEventListener('pointermove',onBlockDragMove);
-  handle.addEventListener('pointerup',onBlockDragEnd);
-  handle.addEventListener('pointercancel',onBlockDragEnd);
+  _drag={blk:blk,clone:clone,offsetX:cx-rect.left,offsetY:cy-rect.top,target:null};
+  try{blk.setPointerCapture(_pend.id);}catch(_){}
 }
-function onBlockDragMove(e){
-  if(!_drag)return;
-  e.preventDefault();
-  _drag.clone.style.left=(e.clientX-_drag.offsetX)+'px';
-  _drag.clone.style.top=(e.clientY-_drag.offsetY)+'px';
-  var el=document.elementFromPoint(e.clientX,e.clientY);
-  var tb=el?el.closest('.time-blocks'):null;
-  if(_drag.target&&_drag.target!==tb)_drag.target.classList.remove('drop-target');
-  _drag.target=tb;
-  if(tb)tb.classList.add('drop-target');
-}
-function onBlockDragEnd(e){
-  if(!_drag)return;
-  var ds=_drag;_drag=null;
-  ds.handle.removeEventListener('pointermove',onBlockDragMove);
-  ds.handle.removeEventListener('pointerup',onBlockDragEnd);
-  ds.handle.removeEventListener('pointercancel',onBlockDragEnd);
-  try{ds.handle.releasePointerCapture(e.pointerId);}catch(_){}
-  if(ds.clone&&ds.clone.parentNode)ds.clone.parentNode.removeChild(ds.clone);
-  ds.blk.classList.remove('dragging');
-  if(ds.target){
-    ds.target.classList.remove('drop-target');
-    var t=ds.blk.querySelector('.block-time');
-    insertSorted(ds.target,ds.blk,t?t.textContent:'');
+function onDragPointerMove(e){
+  if(_drag){
+    if(e.cancelable)e.preventDefault();
+    _drag.clone.style.left=(e.clientX-_drag.offsetX)+'px';
+    _drag.clone.style.top=(e.clientY-_drag.offsetY)+'px';
+    var el=document.elementFromPoint(e.clientX,e.clientY);
+    var tb=el?el.closest('.time-blocks'):null;
+    if(_drag.target&&_drag.target!==tb)_drag.target.classList.remove('drop-target');
+    _drag.target=tb;
+    if(tb){tb.classList.add('drop-target');positionPlaceholder(tb,e.clientY);}else removePlaceholder();
+    return;
   }
+  if(!_pend)return;
+  var dx=e.clientX-_pend.x,dy=e.clientY-_pend.y,dist=Math.sqrt(dx*dx+dy*dy);
+  if(_pend.type==='mouse'){ if(dist>6)beginDrag(e.clientX,e.clientY); }
+  else if(dist>12){ clearPend(_pend.blk); _pend=null; } // moved before hold -> let it scroll
+}
+function onDragPointerUp(e){
+  var blk=_pend?_pend.blk:(_drag?_drag.blk:null);
+  if(blk)clearPend(blk);
+  if(_drag){
+    var ds=_drag;_drag=null;
+    try{ds.blk.releasePointerCapture(e.pointerId);}catch(_){}
+    if(ds.clone&&ds.clone.parentNode)ds.clone.parentNode.removeChild(ds.clone);
+    ds.blk.classList.remove('dragging');
+    if(ds.target){
+      ds.target.classList.remove('drop-target');
+      if(_ph&&_ph.parentNode===ds.target){ds.target.insertBefore(ds.blk,_ph);}
+      else{ds.target.insertBefore(ds.blk,dropBeforeNode(ds.target,e.clientY,ds.blk));}
+      recomputeTime(ds.blk);
+    }
+  }
+  removePlaceholder();_pend=null;
+}
+function dropBeforeNode(tb,cy,dragged){
+  var kids=tb.querySelectorAll('.block');
+  for(var i=0;i<kids.length;i++){
+    if(kids[i]===dragged)continue;
+    var r=kids[i].getBoundingClientRect();
+    if(cy<r.top+r.height/2)return kids[i];
+  }
+  return null;
+}
+function positionPlaceholder(tb,cy){
+  if(!_ph){_ph=document.createElement('div');_ph.className='block-placeholder';}
+  var before=dropBeforeNode(tb,cy,_drag.blk);
+  if(before)tb.insertBefore(_ph,before);else tb.appendChild(_ph);
+}
+function removePlaceholder(){ if(_ph&&_ph.parentNode)_ph.parentNode.removeChild(_ph); }
+function parseTimeList(s){
+  var out=[];if(!s)return out;var re=/(\d{1,2}):(\d{2})/g,m;
+  while((m=re.exec(s)))out.push(parseInt(m[1],10)*60+parseInt(m[2],10));
+  return out;
+}
+function fmtMin(t){t=((t%1440)+1440)%1440;return Math.floor(t/60)+':'+pad(t%60);}
+function recomputeTime(blk){
+  var tEl=blk.querySelector('.block-time'),dur=null;
+  if(tEl){
+    var nums=parseTimeList(tEl.textContent);
+    if(!nums.length)return; // special label like "כל היום" — leave as is
+    dur=nums.length>1?nums[1]-nums[0]:null;
+  }
+  var prev=blk.previousElementSibling;
+  while(prev&&!prev.classList.contains('block'))prev=prev.previousElementSibling;
+  var startMin=9*60;
+  if(prev){var pn=parseTimeList((prev.querySelector('.block-time')||{}).textContent||'');if(pn.length)startMin=pn.length>1?pn[1]:pn[0];}
+  var txt=(dur!=null&&dur>0)?fmtMin(startMin)+'–'+fmtMin(startMin+dur):fmtMin(startMin);
+  if(tEl)tEl.textContent=txt;
+  else{var d=document.createElement('div');d.className='block-time';d.textContent=txt;blk.insertBefore(d,blk.firstChild);}
 }
 
 // ADD ACTIVITY
