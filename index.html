@@ -668,6 +668,21 @@ WEEKS.forEach(function(w){
       insertSorted(tbs,cblk,cb.time);
     }
 
+    // שעת קריאה — כל יום, חוץ מימי צום (י״ז בתמוז ות׳ באב)
+    if(!(special&&special.type==='fast')){
+      var rb={type:'free',time:'17:00–18:00',emoji:'📖',title:'שעת קריאה',desc:'אפשר לקרוא לבד, או שדניאל מקריא'};
+      var rblk=document.createElement('div');
+      rblk.className='block '+rb.type;
+      rblk.innerHTML='<div class="block-time">'+rb.time+'</div>'
+        +'<span class="block-emoji">'+rb.emoji+'</span>'
+        +'<div class="block-title">'+rb.title+'</div>'
+        +'<div class="block-desc">'+rb.desc+'</div>'
+        +'<div class="block-actions"><span class="block-hint" data-action="search">🔍 רעיונות</span></div>';
+      rblk.querySelector('[data-action="search"]').onclick=function(e){e.stopPropagation();openSearch('free',rb.title,w.title.replace('שבוע ',''));};
+      attachDelete(rblk);attachEdit(rblk);attachCheck(rblk);attachDragHandle(rblk);
+      insertSorted(tbs,rblk,rb.time);
+    }
+
     var addBtn=document.createElement('button');
     addBtn.className='add-block-btn';
     addBtn.textContent='+ הוסף פעילות';
