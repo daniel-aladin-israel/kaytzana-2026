@@ -118,6 +118,8 @@ main{max-width:1100px;margin:0 auto;padding:24px 18px 80px;}
 .ideas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;}
 .idea-block{cursor:default;border:1.5px dashed rgba(245,200,66,.6)!important;}
 .idea-block .block-emoji{font-size:1.4rem;}
+.idea-refresh{position:absolute;top:6px;left:6px;width:24px;height:24px;border-radius:50%;border:none;background:rgba(245,200,66,.28);color:var(--block-text);font-size:.78rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;z-index:3;transition:transform .25s,background .15s;}
+.idea-refresh:hover{background:rgba(245,200,66,.55);transform:rotate(180deg);}
 .idea-add-btn{margin-top:10px;width:100%;background:linear-gradient(135deg,#f5c842,#ff6b35);border:none;border-radius:999px;padding:8px;font-family:'Rubik',sans-serif;font-weight:800;font-size:.78rem;color:#1a1200;cursor:pointer;transition:filter .15s;}
 .idea-add-btn:hover{filter:brightness(1.07);}
 .block:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.35);}
@@ -1023,6 +1025,13 @@ function renderIdeas(wid){
     card.innerHTML='<span class="block-emoji">'+idea.e+'</span>'
       +'<div class="block-title">'+idea.t+'</div>'
       +'<div class="block-desc">'+idea.d+'</div>';
+    var ref=document.createElement('button');
+    ref.className='idea-refresh';
+    ref.setAttribute('title','החלף לרעיון אחר');
+    ref.setAttribute('aria-label','החלף לרעיון אחר');
+    ref.textContent='🔄';
+    ref.onclick=function(e){e.stopPropagation();refreshIdea(wid,idea);};
+    card.appendChild(ref);
     var btn=document.createElement('button');
     btn.className='idea-add-btn';
     btn.textContent='➕ הוסף לתוכנית';
@@ -1030,6 +1039,15 @@ function renderIdeas(wid){
     card.appendChild(btn);
     box.appendChild(card);
   });
+}
+function refreshIdea(wid,idea){
+  var pool=getIdeaPool(wid),i=pool.indexOf(idea);
+  if(i<0||i>=10||pool.length<=10)return; // אין רזרבה להחלפה
+  var newIdea=pool.splice(10,1)[0];
+  var old=pool[i];
+  pool[i]=newIdea;
+  pool.push(old);
+  renderIdeas(wid);
 }
 function openIdeaAdd(wid,idea){
   _ideaCtx={wid:wid,idea:idea};
