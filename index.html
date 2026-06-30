@@ -112,6 +112,16 @@ main{max-width:1100px;margin:0 auto;padding:24px 18px 80px;}
 .block.done .block-title{text-decoration:line-through;}
 .block.done .block-check{background:#3ecf72;border-color:#3ecf72;color:#fff;}
 .edit-select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:'Rubik',sans-serif;font-size:.9rem;cursor:pointer;}
+.ideas-section{margin-top:6px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 20px;}
+.ideas-section h3{font-family:'Fredoka One',sans-serif;font-size:1.1rem;margin-bottom:4px;}
+.ideas-sub{color:var(--muted);font-size:.8rem;margin-bottom:14px;}
+.ideas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;}
+.idea-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;}
+.idea-emoji{font-size:1.7rem;line-height:1;}
+.idea-title{font-weight:800;font-size:.9rem;}
+.idea-desc{font-size:.75rem;color:var(--muted);line-height:1.45;}
+.idea-add-btn{margin-top:8px;background:linear-gradient(135deg,#f5c842,#ff6b35);border:none;border-radius:999px;padding:8px;font-family:'Rubik',sans-serif;font-weight:800;font-size:.78rem;color:#1a1200;cursor:pointer;transition:filter .15s;}
+.idea-add-btn:hover{filter:brightness(1.07);}
 .block:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.35);}
 .block-time{font-size:.62rem;font-weight:800;color:var(--block-color);letter-spacing:.5px;margin-bottom:3px;}
 .block-emoji{font-size:1.3rem;display:block;margin-bottom:4px;}
@@ -693,7 +703,16 @@ WEEKS.forEach(function(w){
   });
 
   sec.appendChild(grid);
+
+  var ideasSec=document.createElement('div');
+  ideasSec.className='ideas-section';
+  ideasSec.innerHTML='<h3>💡 עוד רעיונות לשבוע '+w.title.replace('שבוע ','')+'</h3>'
+    +'<div class="ideas-sub">לחצו "הוסף לתוכנית" כדי לשבץ פעילות — ורעיון חדש יופיע במקומה</div>'
+    +'<div class="ideas-grid" id="ideas-'+w.id+'"></div>';
+  sec.appendChild(ideasSec);
+
   wp.appendChild(sec);
+  renderIdeas(w.id);
 });
 
 // GOOGLE SEARCH
@@ -828,6 +847,228 @@ function attachCheck(blk){
   c.textContent='✓';
   c.onclick=function(e){e.stopPropagation();blk.classList.toggle('done');};
   blk.appendChild(c);
+}
+
+// ===== מאגר רעיונות נוסף לכל שבוע (ייחודי לשבוע, ללא חזרה על הקיים) =====
+var WEEK_IDEAS={
+w0:[
+{e:'🐾',t:'טביעות כפות חיות',d:'יוצרים תבליטי כפות מחימר ומנחשים למי הן שייכות'},
+{e:'🥁',t:'תופי ג\'ונגל',d:'מכינים תוף ומנגנים ריתמים אפריקאיים ביחד'},
+{e:'🦓',t:'חידון חיות הסוואנה',d:'ניחוש בעל החיים לפי רמזים וקולות'},
+{e:'🌿',t:'שביל ההישרדות היחף',d:'מסלול חושים יחפים עם תחנות מרקם בחצר'},
+{e:'🍯',t:'מסע שרשרת המזון',d:'מי אוכל את מי? משחק התאמה וטעימות דבש'},
+{e:'🎨',t:'אומנות בחול צבעוני',d:'מציירים נופי סוואנה בבקבוקי חול בגוונים'},
+{e:'☀️',t:'שעון שמש משלנו',d:'בונים שעון שמש ועוקבים אחרי הצללים'},
+{e:'🪶',t:'תליון שבט הגאווה',d:'יצירת קישוט נוצות וחרוזים אישי'},
+{e:'🌍',t:'מפת אפריקה ענקית',d:'מציירים את היבשת ומדביקים את החיות במקומן'},
+{e:'🎭',t:'תיאטרון צלליות',d:'מספרים את סיפור החיות מאחורי סדין מואר'},
+{e:'🧩',t:'חדר בריחה של סקאר',d:'פותרים 5 חידות כדי להציל את הממלכה'},
+{e:'💧',t:'בריכת חיות מרעננת',d:'משחקי מים בחצר בנושא שלולית הג\'ונגל'},
+{e:'🦒',t:'מדידות ענק',d:'משווים את הגובה שלנו לג\'ירפה, פיל ואריה'},
+{e:'🏕️',t:'מאהל מספרי סיפורים',d:'בונים אוהל וממציאים סיפור הרפתקה בסוואנה'}
+],
+w1:[
+{e:'🧹',t:'מירוץ מטאטאים',d:'מסלול מכשולים "מעופף" עם מטאטא בין שערים'},
+{e:'🦉',t:'דואר ינשופים',d:'כותבים מכתב סתר ו"שולחים" אותו לחבר'},
+{e:'🔮',t:'כדור הבדולח',d:'משחק ניבוי עתיד מצחיק עם תחזיות'},
+{e:'🐉',t:'ביצת הדרקון',d:'יוצרים ביצה מסתורית שמתפצחת ומגלה הפתעה'},
+{e:'🕯️',t:'נרות אולם האוכל',d:'ניסוי מדע: נרות "צפים" ומה גורם להם לכבות'},
+{e:'📜',t:'דיו בלתי נראה',d:'כותבים מסר סודי וחושפים אותו בחום או לימון'},
+{e:'🗝️',t:'ציד המפתח המעופף',d:'מאתרים את המפתח הנכון מבין עשרות מזויפים'},
+{e:'🌟',t:'מפת הכוכבים',d:'שיעור אסטרונומיה: מזהים קבוצות כוכבים'},
+{e:'🎶',t:'מקהלת הצפרדעים',d:'שרים את המנון הוגוורטס בקנון מצחיק'},
+{e:'🧉',t:'מעבדת שיקויים טעימה',d:'מערבבים מיצים וצבעי מאכל וטועמים בעיניים עצומות'},
+{e:'🏰',t:'דגם טירת הוגוורטס',d:'בונים את הטירה מקופסאות וגלילי קרטון'},
+{e:'🎩',t:'מצנפת המיון',d:'יוצרים מצנפת ומגרילים את הבית של כל אחד'},
+{e:'🦡',t:'יצור הקסם שלי',d:'ממציאים ובונים חיית פלא עם כוחות מיוחדים'},
+{e:'⚡',t:'תחרות הטלת לחשים',d:'מי משלים את התנועה והמילה הכי מהר?'}
+],
+w2:[
+{e:'🍄',t:'בית פטרייה ממוחזר',d:'בונים בית דרדס מפטריית קרטון ופקקים'},
+{e:'🔵',t:'ציד החפצים הכחולים',d:'מי מוצא הכי הרבה דברים כחולים בבית?'},
+{e:'🧪',t:'מעבדת השיקוי של גרגמל',d:'ניסוי בועות וצבע כחול שמשנה גוון'},
+{e:'🐱',t:'בריחה מאזראל',d:'משחק תופסת: לחמוק מהחתול של גרגמל'},
+{e:'🎵',t:'לה-לה-לה קריוקי',d:'שרים את שיר הדרדסים בגרסאות מצחיקות'},
+{e:'🍶',t:'גלידה כחולה ביתית',d:'מכינים גלידה בגוון שמי-דרדס וטועמים'},
+{e:'👒',t:'כובעי דרדס לבנים',d:'יוצרים כובע דרדס מנייר או בד לכל אחד'},
+{e:'🪵',t:'גשר הפטריות',d:'אתגר בנייה: גשר שעובר מעל "הנהר"'},
+{e:'🧠',t:'חידות דרדסבא',d:'תחרות חידות חוכמה בנוסח הזקן החכם'},
+{e:'🌸',t:'גינת הדרדסית',d:'שותלים זרע בעציץ ממוחזר ומקשטים'},
+{e:'🎯',t:'קליעה לסל הפטריות',d:'תחרות דיוק עם כדורים לתוך "פטריות"'},
+{e:'🐾',t:'מצעד תחפושות כחול',d:'כל אחד מעצב דרדס ייחודי ומציג אותו'},
+{e:'🖌️',t:'ציור קיר הכפר',d:'ציור משותף ענק של כל בתי הכפר'},
+{e:'🧭',t:'מפת אוצר הכפר',d:'יוצרים ופותרים מפת אוצר של הדרדסים'}
+],
+w3:[
+{e:'🥷',t:'אימון נינג\'ה חשאי',d:'מסלול התגנבות בלי להפעיל "אזעקות" בלונים'},
+{e:'🍕',t:'תחרות סיבוב הבצק',d:'מי מסובב "בצק" (מגבת) הכי גבוה בלי להפיל?'},
+{e:'🐢',t:'שריון צב ממוחזר',d:'יוצרים שריון נינג\'ה מקרטון וצובעים'},
+{e:'🗽',t:'הרפתקה בביוב',d:'מסלול זחילה במנהרות סדינים מתחת לשולחנות'},
+{e:'🥢',t:'אתגר מקלות האכילה',d:'מי מעביר הכי הרבה חפצים עם צ\'ופסטיקס?'},
+{e:'🎨',t:'גרפיטי נינג\'ה',d:'ציור בסגנון רחוב על בריסטול ענק'},
+{e:'🧗',t:'אקרובטיקת צבים',d:'גלגולים, קפיצות וקפיצות מעל כריות'},
+{e:'🍜',t:'ערב אטריות מזרחי',d:'מכינים אטריות פשוטות וטועמים עם מקלות'},
+{e:'🔦',t:'משימת לילה בחושך',d:'מוצאים רמזים זוהרים עם פנס בחדר מוחשך'},
+{e:'🌉',t:'גשר ברוקלין מגפרורים',d:'אתגר הנדסה: גשר שמחזיק משקל'},
+{e:'🥋',t:'מבחן החגורות',d:'מבחן תנועות ומעניקים חגורת בד צבעונית'},
+{e:'🐭',t:'שיעור עם מאסטר ספלינטר',d:'תרגיל ריכוז ונשימה רגוע בסגנון נינג\'ה'},
+{e:'🎯',t:'דוג\'ו הדיוק',d:'תחנות קליעה וזריקה למטרות שונות'},
+{e:'📋',t:'תפריט הפיצרייה',d:'מתכננים תפריט עם שמות פיצה של נינג\'ות'}
+],
+w4:[
+{e:'🤠',t:'חיפוש האוצר של וודי',d:'מצוד רמזים בעקבות הצעצועים ברחבי הבית'},
+{e:'🚀',t:'רקטת באז',d:'בונים רקטה מבקבוק ומשגרים אותה בחצר'},
+{e:'🧸',t:'בית חולים לצעצועים',d:'"מתקנים" ומחבשים צעצועים אהובים'},
+{e:'🎲',t:'משחק הקופסה הענק',d:'יוצרים לוח משחק שאנחנו החיילים בו'},
+{e:'🐴',t:'מירוץ הסוסים של וודי',d:'מירוץ "רכיבה" על מקלות בחצר'},
+{e:'🛸',t:'החייזרים הירוקים',d:'יוצרים את חייזרי הפיצה ומשחקים "המלחן בחר"'},
+{e:'✋',t:'בובות יד מצוירות',d:'מציירים פרצוף על היד ומעלים הצגה קצרה'},
+{e:'🏗️',t:'מגדל הצעצועים',d:'אתגר: מגדל הכי גבוה מקוביות וצעצועים'},
+{e:'🪂',t:'מצנח לבאז',d:'בונים מצנח ומפילים דמות בעדינות מגובה'},
+{e:'🎤',t:'קריוקי "ידידי הנאמן"',d:'שרים יחד את שיר Toy Story'},
+{e:'🧩',t:'מי הצעצוע המסתורי?',d:'משחק ניחוש לפי תיאור ותכונות'},
+{e:'📦',t:'מבוך הקרטון',d:'בונים מבוך מקופסאות וזוחלים בתוכו'},
+{e:'🐷',t:'קופת חזיר',d:'מעצבים קופת חיסכון בדמות האמי'},
+{e:'🌟',t:'ליל זוהר בחושך',d:'משחקי חפצים זוהרים כמו צעצועים בלילה'}
+],
+w5:[
+{e:'🏹',t:'קליעה למטרה',d:'תחנת דיוק עם חצים רכים או כדורים למטרות'},
+{e:'🪢',t:'אמנות הקשרים',d:'לומדים לקשור 3 קשרים שימושיים להישרדות'},
+{e:'🔥',t:'מדורה בלי אש',d:'בונים "מדורה" מענפים וצלופן וצובעים להבות'},
+{e:'🧭',t:'ניווט בין המחוזות',d:'מסלול עם מצפן ורמזים בחצר'},
+{e:'🌿',t:'זיהוי צמחים',d:'משחק התאמה: מה אכיל ומה לא ביער'},
+{e:'🤝',t:'אתגר הברית',d:'משימות שאפשר לפתור רק בשיתוף פעולה'},
+{e:'🎁',t:'מתנות מהספונסרים',d:'מרוויחים "מתנות" בהשלמת אתגרים'},
+{e:'💧',t:'איסוף מים בטוח',d:'אתגר העברת מים בין כלים בלי לשפוך'},
+{e:'🪖',t:'מסלול הזירה',d:'זחילה, קפיצה ואיזון נגד השעון'},
+{e:'🌋',t:'רצפת הלבה',d:'משחק קפיצה בין אזורים בטוחים'},
+{e:'🍞',t:'חלוקת מנות חכמה',d:'מתכננים ומחלקים "מנות" בצדק לקבוצה'},
+{e:'🏴',t:'דגל המחוז שלי',d:'מעצבים דגל וסמל ייחודי לקבוצה'},
+{e:'🕊️',t:'אות שלוש האצבעות',d:'יוצרים סימן יד קבוצתי ומדברים על משמעותו'},
+{e:'⏱️',t:'אתגר 60 שניות',d:'תחנות מהירות — כמה משימות בדקה?'}
+],
+w6:[
+{e:'🧲',t:'כוחות מגנטו',d:'ניסויי מגנטים: מה נמשך ומה לא?'},
+{e:'👁️',t:'מבחן חושי-העל',d:'מזהים ריחות, קולות ומרקמים בעיניים עצומות'},
+{e:'🌀',t:'שיגור אופטי',d:'מירוץ כדורי ספוג למטרה'},
+{e:'🦸',t:'תא ההחלפה המהיר',d:'מי מתחפש לתחפושת גיבור הכי מהר?'},
+{e:'❄️',t:'כוח הקרח',d:'ניסוי קרח ותחרות הפשרה מהירה'},
+{e:'🧠',t:'טלפתיה של פרופסור X',d:'משחק קריאת מחשבות וניחוש בזוגות'},
+{e:'🏃',t:'מסלול קוויקסילבר',d:'אתגר מהירות וזריזות נגד השעון'},
+{e:'🎨',t:'הלוגו שלי',d:'מעצבים סמל X אישי על בריסטול או חולצה'},
+{e:'🛡️',t:'מגן הכוח',d:'בונים מגן מקרטון ומעצבים אותו'},
+{e:'🤜',t:'תחנת הכוח',d:'אתגרי כוח: כמה שכיבות או קפיצות בדקה?'},
+{e:'🧬',t:'מעבדת המוטציות',d:'יוצרים "DNA" מסוכריות ולומדים מה זה גן'},
+{e:'🌪️',t:'סופת סטורם',d:'ניסוי מזג אוויר: ענן בצנצנת'},
+{e:'🎭',t:'גיבור או נבל?',d:'משחק תפקידים על בחירות של גיבורים'},
+{e:'🔭',t:'מצוד הסיירבו',d:'חיפוש מוטנטים נסתרים לפי רמזים בבית'}
+],
+w7:[
+{e:'🏛️',t:'בניית הקולוסיאום',d:'מודל הזירה מקרטון וכוסות'},
+{e:'⚔️',t:'אימון גלדיאטורים',d:'תחרות מיומנויות ידידותית בזירה'},
+{e:'👑',t:'זר דפנה לקיסר',d:'יוצרים זר ראש בסגנון רומאי'},
+{e:'🪙',t:'הטבעת מטבעות',d:'מעצבים "מטבעות" רומאיים מחימר או בצק'},
+{e:'🍝',t:'מעבדת הפסטה',d:'מזהים סוגי פסטה ומכינים רוטב פשוט'},
+{e:'🏺',t:'פסיפס רומאי',d:'יוצרים פסיפס מריבועי נייר צבעוני'},
+{e:'🔢',t:'ספרות רומיות',d:'משחק מתמטי עם המספרים I, V, X'},
+{e:'🛡️',t:'מגן הלגיונר',d:'בונים מגן רומאי ועורכים מצעד לגיון'},
+{e:'🌋',t:'הר הגעש פומפיי',d:'ניסוי התפרצות וזיקוקי סודה'},
+{e:'🎭',t:'מסכות התיאטרון',d:'יוצרים מסכות קומדיה וטרגדיה'},
+{e:'🏇',t:'מירוץ מרכבות',d:'מירוץ "מרכבות" קרטון בחצר'},
+{e:'🗺️',t:'מפת האימפריה',d:'מציירים את גבולות רומא ומסמנים ערים'},
+{e:'🍇',t:'משתה רומאי',d:'טעימות ענבים, גבינות ופירות בסגנון עתיק'},
+{e:'⏳',t:'ארכיאולוגים ליום',d:'"חופרים" וחושפים חפצים קבורים בחול'}
+],
+w8:[
+{e:'💨',t:'מנהרת הרוח',d:'מי בונה את הרכב הכי מהיר מגלגלים?'},
+{e:'🌀',t:'לופ הסופר-מהירות',d:'מסלול גלגול כדורים דרך לולאה'},
+{e:'💎',t:'ציד אבני הכאוס',d:'מאתרים 7 "אבני כאוס" נסתרות בבית'},
+{e:'🦔',t:'קיפוד מפומפונים',d:'יוצרים את סוניק מפומפונים וצבע'},
+{e:'⚡',t:'תחנת רפלקסים',d:'משחקי תגובה מהירה — מי לוחץ ראשון?'},
+{e:'🛞',t:'מירוץ מכוניות בלון',d:'בונים מכונית בלון ומתחרים במסלול'},
+{e:'🟡',t:'אתגר 100 הטבעות',d:'אוספים טבעות בזמן קצוב במסלול'},
+{e:'🎨',t:'מפת Zone חדשה',d:'מציירים שלב משחק עם מכשולים ומלכודות'},
+{e:'🤖',t:'רובוטים של אגמן',d:'בונים "רובוט" ממוחזר ומפילים אותו'},
+{e:'🏃',t:'מרתון הזיגזג',d:'מסלול ריצה מפותל נגד השעון'},
+{e:'🔵',t:'ג\'לי כחול מהיר',d:'מכינים קינוח כחול ומקשטים'},
+{e:'🎮',t:'משחק וידאו חי',d:'משחקים את סוניק בגרסה אנושית בחצר'},
+{e:'✈️',t:'מטוס של טיילס',d:'יוצרים מטוס נייר ומתחרים בטיסה'},
+{e:'⏱️',t:'שיא אישי',d:'כל אחד משפר את הזמן שלו במסלול'}
+],
+w9:[
+{e:'🍌',t:'מטבע הבננה',d:'משחק כלכלה מצחיק עם "בננות" כמטבע'},
+{e:'👓',t:'משקפי מיניון',d:'יוצרים גוגלס מחומרים ממוחזרים'},
+{e:'🗯️',t:'שפת המיניונית',d:'ממציאים מילים ומשחקים "תרגם את הג\'יבריש"'},
+{e:'🧪',t:'מעבדת הפלאמפקין',d:'ניסוי בועות ענק וקצף צבעוני'},
+{e:'🍌',t:'מירוץ הקליפות',d:'אתגר זריזות: לחמוק מ"קליפות בננה"'},
+{e:'🎵',t:'באנאנה קריוקי',d:'שרים שירי מיניונים בג\'יבריש'},
+{e:'🟡',t:'מצוד הצהוב',d:'אוספים כמה שיותר חפצים צהובים בזמן'},
+{e:'🤪',t:'תחרות הפרצופים',d:'מי עושה את פרצוף המיניון הכי מצחיק?'},
+{e:'🍮',t:'בננה ספליט ענק',d:'מרכיבים קינוח בננות משותף'},
+{e:'🎯',t:'הטלת בננות לסל',d:'תחרות קליעה עם "בננות" ספוג'},
+{e:'🏗️',t:'מגדל המיניונים',d:'בונים מגדל הכי גבוה מכוסות צהובות'},
+{e:'🕵️',t:'משימת ריגול חשאית',d:'מסלול התגנבות בסגנון סוכני Gru'},
+{e:'🎈',t:'אתגר הבלון הצהוב',d:'משחקי שיתוף פעולה עם בלון בין הברכיים'},
+{e:'🖍️',t:'קומיקס מיניון',d:'כל אחד מצייר רצועת קומיקס מצחיקה'}
+]
+};
+var _ideaPools={},_ideaCtx=null;
+function getIdeaPool(wid){ if(!_ideaPools[wid])_ideaPools[wid]=(WEEK_IDEAS[wid]||[]).slice(); return _ideaPools[wid]; }
+function renderIdeas(wid){
+  var box=document.getElementById('ideas-'+wid);
+  if(!box)return;
+  var pool=getIdeaPool(wid),shown=pool.slice(0,10);
+  box.innerHTML='';
+  if(!shown.length){box.innerHTML='<p style="color:var(--muted);font-size:.85rem">הוספת את כל הרעיונות לשבוע הזה 🎉</p>';return;}
+  shown.forEach(function(idea){
+    var card=document.createElement('div');
+    card.className='idea-card';
+    card.innerHTML='<span class="idea-emoji">'+idea.e+'</span>'
+      +'<div class="idea-title">'+idea.t+'</div>'
+      +'<div class="idea-desc">'+idea.d+'</div>';
+    var btn=document.createElement('button');
+    btn.className='idea-add-btn';
+    btn.textContent='➕ הוסף לתוכנית';
+    btn.onclick=function(){openIdeaAdd(wid,idea);};
+    card.appendChild(btn);
+    box.appendChild(card);
+  });
+}
+function openIdeaAdd(wid,idea){
+  _ideaCtx={wid:wid,idea:idea};
+  document.getElementById('ideaModalName').textContent=idea.e+' '+idea.t;
+  var page=document.getElementById('page-'+wid),cols=page?page.querySelectorAll('.day-col'):[];
+  var sel=document.getElementById('ideaDay');sel.innerHTML='';
+  for(var j=0;j<cols.length;j++){
+    var nm=(cols[j].querySelector('.day-name')||{}).textContent||('יום '+(j+1));
+    var o=document.createElement('option');o.value=j;o.textContent=nm.trim();sel.appendChild(o);
+  }
+  document.getElementById('ideaTime').value='';
+  document.getElementById('ideaModalOverlay').classList.add('open');
+}
+function closeIdeaAdd(){document.getElementById('ideaModalOverlay').classList.remove('open');_ideaCtx=null;}
+function confirmIdeaAdd(){
+  if(!_ideaCtx)return;
+  var wid=_ideaCtx.wid,idea=_ideaCtx.idea;
+  var time=document.getElementById('ideaTime').value.trim();
+  var page=document.getElementById('page-'+wid),cols=page?page.querySelectorAll('.day-col'):[];
+  var idx=parseInt(document.getElementById('ideaDay').value,10);
+  if(!cols[idx]){closeIdeaAdd();return;}
+  var tb=cols[idx].querySelector('.time-blocks');
+  var blk=document.createElement('div');
+  blk.className='block creative';
+  blk.innerHTML=(time?'<div class="block-time">'+time+'</div>':'')
+    +'<span class="block-emoji">'+idea.e+'</span>'
+    +'<div class="block-title">'+idea.t+'</div>'
+    +'<div class="block-desc">'+idea.d+'</div>'
+    +'<div class="block-actions"><span class="block-hint" data-action="search">🔍 רעיונות</span></div>';
+  var wk=WEEKS.find(function(x){return x.id===wid;})||{title:''};
+  blk.querySelector('[data-action="search"]').onclick=function(e){e.stopPropagation();openSearch('creative',idea.t,wk.title.replace('שבוע ',''));};
+  attachDelete(blk);attachEdit(blk);attachCheck(blk);attachDragHandle(blk);
+  insertSorted(tb,blk,time);
+  var pool=getIdeaPool(wid),k=pool.indexOf(idea);if(k>-1)pool.splice(k,1);
+  renderIdeas(wid);
+  closeIdeaAdd();
 }
 function onBlockPointerDown(e){
   if(e.button===2)return;
@@ -1004,8 +1245,8 @@ function openAddModal(weekId, dayName){
 function closeAddModal(){
   document.getElementById('addModalOverlay').classList.remove('open');
 }
-document.addEventListener('click',function(e){if(e.target&&e.target.id==='addModalOverlay')closeAddModal();if(e.target&&e.target.id==='editModalOverlay')closeEditModal();});
-document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeAddModal();closeEditModal();}});
+document.addEventListener('click',function(e){if(e.target&&e.target.id==='addModalOverlay')closeAddModal();if(e.target&&e.target.id==='editModalOverlay')closeEditModal();if(e.target&&e.target.id==='ideaModalOverlay')closeIdeaAdd();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeAddModal();closeEditModal();closeIdeaAdd();}});
 
 function submitAdd(){
   var emoji=_addEmoji||'📌';
@@ -1249,6 +1490,30 @@ function toggleTheme(){
       <div style="display:flex;gap:10px;margin-top:6px;">
         <button class="btn-cancel" onclick="closeEditModal()">ביטול</button>
         <button class="btn-add" onclick="saveEdit()">💾 שמירה</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="ideaModalOverlay">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeIdeaAdd()">✕</button>
+      <div class="modal-title">➕ הוספה לתוכנית</div>
+      <div class="modal-time" id="ideaModalName"></div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-section-title">באיזה יום?</div>
+        <select id="ideaDay" class="edit-select"></select>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">באיזו שעה?</div>
+        <input id="ideaTime" type="text" placeholder="למשל: 10:00–11:00" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:'Rubik',sans-serif;font-size:.9rem;">
+      </div>
+      <div style="display:flex;gap:10px;margin-top:6px;">
+        <button class="btn-cancel" onclick="closeIdeaAdd()">ביטול</button>
+        <button class="btn-add" onclick="confirmIdeaAdd()">➕ הוסף</button>
       </div>
     </div>
   </div>
