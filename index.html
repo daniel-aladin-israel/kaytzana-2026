@@ -116,11 +116,9 @@ main{max-width:1100px;margin:0 auto;padding:24px 18px 80px;}
 .ideas-section h3{font-family:'Fredoka One',sans-serif;font-size:1.1rem;margin-bottom:4px;}
 .ideas-sub{color:var(--muted);font-size:.8rem;margin-bottom:14px;}
 .ideas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;}
-.idea-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;}
-.idea-emoji{font-size:1.7rem;line-height:1;}
-.idea-title{font-weight:800;font-size:.9rem;}
-.idea-desc{font-size:.75rem;color:var(--muted);line-height:1.45;}
-.idea-add-btn{margin-top:8px;background:linear-gradient(135deg,#f5c842,#ff6b35);border:none;border-radius:999px;padding:8px;font-family:'Rubik',sans-serif;font-weight:800;font-size:.78rem;color:#1a1200;cursor:pointer;transition:filter .15s;}
+.idea-block{cursor:default;border:1.5px dashed rgba(245,200,66,.6)!important;}
+.idea-block .block-emoji{font-size:1.4rem;}
+.idea-add-btn{margin-top:10px;width:100%;background:linear-gradient(135deg,#f5c842,#ff6b35);border:none;border-radius:999px;padding:8px;font-family:'Rubik',sans-serif;font-weight:800;font-size:.78rem;color:#1a1200;cursor:pointer;transition:filter .15s;}
 .idea-add-btn:hover{filter:brightness(1.07);}
 .block:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.35);}
 .block-time{font-size:.62rem;font-weight:800;color:var(--block-color);letter-spacing:.5px;margin-bottom:3px;}
@@ -712,7 +710,6 @@ WEEKS.forEach(function(w){
   sec.appendChild(ideasSec);
 
   wp.appendChild(sec);
-  renderIdeas(w.id);
 });
 
 // GOOGLE SEARCH
@@ -1022,10 +1019,10 @@ function renderIdeas(wid){
   if(!shown.length){box.innerHTML='<p style="color:var(--muted);font-size:.85rem">הוספת את כל הרעיונות לשבוע הזה 🎉</p>';return;}
   shown.forEach(function(idea){
     var card=document.createElement('div');
-    card.className='idea-card';
-    card.innerHTML='<span class="idea-emoji">'+idea.e+'</span>'
-      +'<div class="idea-title">'+idea.t+'</div>'
-      +'<div class="idea-desc">'+idea.d+'</div>';
+    card.className='block idea-block';
+    card.innerHTML='<span class="block-emoji">'+idea.e+'</span>'
+      +'<div class="block-title">'+idea.t+'</div>'
+      +'<div class="block-desc">'+idea.d+'</div>';
     var btn=document.createElement('button');
     btn.className='idea-add-btn';
     btn.textContent='➕ הוסף לתוכנית';
@@ -1406,6 +1403,9 @@ function toggleTheme(){
   applyTheme(mode);
 }
 (function(){var saved='dark';try{saved=localStorage.getItem('kaytzana-theme')||'dark';}catch(e){}applyTheme(saved);})();
+
+// אכלוס מאגר הרעיונות בתחתית כל שבוע (אחרי שכל הנתונים והפונקציות הוגדרו)
+WEEKS.forEach(function(w){renderIdeas(w.id);});
 </script>
 <div class="modal-overlay" id="calOverlay">
   <div class="modal" style="max-width:720px">
